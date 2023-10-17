@@ -18,27 +18,14 @@ class PositionalEncoding(nn.Module):
         double the previous frequency. For each frequency, you should encode the input
         signal using both sine and cosine.
         """
-        batch_size, sequence_length, num_channels = samples.shape
-        position = torch.arange(sequence_length).unsqueeze(0).repeat(batch_size, 1)
-        div_term = torch.exp(
-            torch.arange(0, num_channels, 2).float()
-            * (-torch.log(torch.tensor(10000.0)) / num_channels)
-        )
+        num_batch, num_dim = samples.shape
 
-        sinusoids = torch.sin(position.float() / div_term)
-        cosinuses = torch.cos(position.float() / div_term)
+        pe = torch.zeros(num_batch, 2 * self.num_octaves)
+        for i in range(self.num_octaves):
+            pe[:, 2 * i] = torch.sin(2 ** (i - 1) * torch.pi * samples[:, 0])
+            pe[:, 2 * i + 1] = torch.cos(2 ** (i - 1) * torch.pi * samples[:, 1])
 
-        # Repeat the positional encodings for each example in the batch
-        sinusoids = sinusoids.unsqueeze(0).repeat(batch_size, 1, 1)
-        cosinuses = cosinuses.unsqueeze(0).repeat(batch_size, 1, 1)
-
-        # Combine sinusoids and cosinuses to create positional encodings
-        encodings = torch.cat([sinusoids, cosinuses], dim=-1)
-
-        # Add positional encodings to the input samples
-        samples_with_pe = samples + encodings
-
-        return samples_with_pe
+        return pe
 
     def d_out(self, dimensionality: int):
-        return dimensionality + 2 * self.num_octaves
+        return dimensionality * 2 * self.num_octaves

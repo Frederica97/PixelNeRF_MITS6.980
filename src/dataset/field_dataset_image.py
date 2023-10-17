@@ -4,7 +4,7 @@ from torch import Tensor
 from PIL import Image
 import torch
 import numpy as np
-import torch.nn.functional as F
+import torch.nn as nn
 
 from .field_dataset import FieldDataset
 
@@ -18,7 +18,6 @@ class FieldDatasetImage(FieldDataset):
         image_array = np.array(image)
         self.image = torch.from_numpy(image_array)
         self.image = torch.tensor(self.image, dtype=torch.float32)
-        print(self.image.shape)
 
     def query(
         self,
@@ -37,7 +36,7 @@ class FieldDatasetImage(FieldDataset):
         )
         coordinates = coordinates * 2 - 1
         coordinates = coordinates.unsqueeze(1).unsqueeze(1)
-        sampled_colors = F.grid_sample(image, coordinates)
+        sampled_colors = nn.functional.grid_sample(image, coordinates)
         return sampled_colors.squeeze(-1).squeeze(-1) / 255
 
     @property

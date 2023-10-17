@@ -3,6 +3,8 @@ from omegaconf import DictConfig
 from torch import Tensor
 
 from .field import Field
+import torch.nn as nn
+import torch
 
 
 class FieldGrid(Field):
@@ -21,7 +23,18 @@ class FieldGrid(Field):
         """
         super().__init__(cfg, d_coordinate, d_out)
         assert d_coordinate in (2, 3)
-        raise NotImplementedError("This is your homework.")
+
+        grid = torch.tensor([0])
+        side_length = cfg.side_length
+
+        if d_coordinate == 2:
+            grid = torch.zeros(d_out, side_length, side_length)
+
+        else:
+            grid = torch.zeros(d_out, side_length, side_length, side_length)
+
+        self.grid = nn.Parameter(grid)
+        self.d_coordinate = d_coordinate
 
     def forward(
         self,
@@ -32,4 +45,13 @@ class FieldGrid(Field):
         depending on what d_coordinate was during initialization.
         """
 
-        raise NotImplementedError("This is your homework.")
+        coordinates = coordinates * 2 - 1
+        if self.d_coordinate == 2:
+            coordinates = coordinates.unsqueeze(1).unsqueeze(1)
+            grid = self.grid.unsqueeze(0).expand(coordinates.shape[0], -1, -1, -1)
+
+        if self.d_coordinate == 3:
+            coordinates = coordinates.unsqueeze(1).unsqueeze(1).unsqueeze(1)
+            grid = self.grid.unsqueeze(0).expand(coordinates.shape[0], -1, -1, -1, -1)
+
+        return nn.functional.grid_sample(grid, coordinates).squeeze(-1).squeeze(-1)
