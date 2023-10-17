@@ -3,8 +3,9 @@ from jaxtyping import Float
 from omegaconf import DictConfig
 from torch import Tensor
 
-from .field import Field
 from src.components.positional_encoding import PositionalEncoding
+
+from .field import Field
 
 
 class FieldMLP(Field):

@@ -1,0 +1,12 @@
+dataset:
+  name: image
+  path: data/rock.jpg
+field:
+  name: grid
+  side_length: 65
+num_iterations: 8192
+visualization_interval: 128
+learning_rate: 0.01
+batch_size: 512
+remap_outputs: true
+output_path: outputs

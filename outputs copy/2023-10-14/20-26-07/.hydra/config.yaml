@@ -1,0 +1,14 @@
+dataset:
+  name: image
+  path: data/rock.jpg
+field:
+  name: mlp
+  positional_encoding_octaves: 6
+  num_hidden_layers: 2
+  d_hidden: 128
+num_iterations: 8192
+visualization_interval: 128
+learning_rate: 0.01
+batch_size: 512
+remap_outputs: true
+output_path: outputs

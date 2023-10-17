@@ -1,7 +1,7 @@
+import torch
 import torch.nn as nn
 from jaxtyping import Float
 from torch import Tensor
-import torch
 
 
 class PositionalEncoding(nn.Module):
@@ -18,12 +18,18 @@ class PositionalEncoding(nn.Module):
         double the previous frequency. For each frequency, you should encode the input
         signal using both sine and cosine.
         """
-        num_batch, num_dim = samples.shape
 
-        pe = torch.zeros(num_batch, 2 * self.num_octaves)
-        for i in range(self.num_octaves):
-            pe[:, 2 * i] = torch.sin(2 ** (i - 1) * torch.pi * samples[:, 0])
-            pe[:, 2 * i + 1] = torch.cos(2 ** (i - 1) * torch.pi * samples[:, 1])
+        if samples.shape[1] < 2:
+            pe = torch.zeros(samples.shape[0], 2 * self.num_octaves)
+            for i in range(self.num_octaves):
+                pe[:, 2 * i] = torch.sin(2 ** (i - 1) * torch.pi * samples[:, 0])
+                pe[:, 2 * i + 1] = torch.cos(2 ** (i - 1) * torch.pi * samples[:, 0])
+        else:
+            num_batch, num_dim = samples.shape
+            pe = torch.zeros(num_batch, 2 * self.num_octaves)
+            for i in range(self.num_octaves):
+                pe[:, 2 * i] = torch.sin(2 ** (i - 1) * torch.pi * samples[:, 0])
+                pe[:, 2 * i + 1] = torch.cos(2 ** (i - 1) * torch.pi * samples[:, 1])
 
         return pe
 

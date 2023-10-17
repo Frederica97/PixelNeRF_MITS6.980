@@ -1,10 +1,10 @@
+import numpy as np
+import torch
+import torch.nn as nn
 from jaxtyping import Float
 from omegaconf import DictConfig
-from torch import Tensor
 from PIL import Image
-import torch
-import numpy as np
-import torch.nn as nn
+from torch import Tensor
 
 from .field_dataset import FieldDataset
 

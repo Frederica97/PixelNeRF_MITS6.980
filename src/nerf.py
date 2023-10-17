@@ -3,6 +3,7 @@ from omegaconf import DictConfig
 from torch import Tensor, nn
 
 from .field.field import Field
+import torch
 
 
 class NeRF(nn.Module):
@@ -32,7 +33,22 @@ class NeRF(nn.Module):
         4. Composite these alpha values together with the evaluated colors from.
         """
 
-        raise NotImplementedError("This is your homework.")
+        sample_locations, boundaries = self.generate_samples(
+            origins, directions, near, far, self.cfg.num_samples
+        )  # shape is 512, 128, 3 and 512, 129
+
+        print(sample_locations.shape)
+
+        print(boundaries.shape)
+        print(self.field)
+        field_output = self.field(sample_locations)
+        rgb_color = torch.sigmoid(field_output[:, :3])
+        density = torch.sigmoid(field_output[:, 3])
+
+        alpha = self.compute_alpha_values(density, boundaries)
+        final_image = self.alpha_composite(alpha, rgb_color)
+
+        return final_image
 
     def generate_samples(
         self,
@@ -50,8 +66,15 @@ class NeRF(nn.Module):
         endpoints at the near and far planes). Also return sample locations, which fall
         at the midpoints of the segments.
         """
+        num_batch = origins.shape[0]
+        boundaries = torch.linspace(near, far, num_samples + 1)
+        midpoints = boundaries[:-1] + boundaries[1:] / 2
 
-        raise NotImplementedError("This is your homework.")
+        samples = torch.einsum(" i , j k-> j i k", midpoints, directions)
+        locations = origins.unsqueeze(1).expand(-1, num_samples, -1) + samples
+        boundaries = boundaries.unsqueeze(0).expand(num_batch, -1)
+
+        return locations, boundaries
 
     def compute_alpha_values(
         self,
@@ -61,8 +84,9 @@ class NeRF(nn.Module):
         """Compute alpha values from volumetric densities (values of sigma) and segment
         boundaries.
         """
-
-        raise NotImplementedError("This is your homework.")
+        delta_values = torch.diff(boundaries)
+        alpha_values = 1.0 - torch.exp(-sigma * delta_values)
+        return alpha_values
 
     def alpha_composite(
         self,
@@ -72,5 +96,9 @@ class NeRF(nn.Module):
         """Alpha-composite the supplied alpha values and colors. You may assume that the
         background is black.
         """
+        transmittance = torch.cumprod(1.0 - alphas, dim=0)
+        weights = alphas * transmittance
 
-        raise NotImplementedError("This is your homework.")
+        expected_radiance = torch.sum(weights.unsqueeze(-1) * colors, dim=0)
+
+        return expected_radiance

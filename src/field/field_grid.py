@@ -1,10 +1,10 @@
+import torch
+import torch.nn as nn
 from jaxtyping import Float
 from omegaconf import DictConfig
 from torch import Tensor
 
 from .field import Field
-import torch.nn as nn
-import torch
 
 
 class FieldGrid(Field):
@@ -24,12 +24,10 @@ class FieldGrid(Field):
         super().__init__(cfg, d_coordinate, d_out)
         assert d_coordinate in (2, 3)
 
-        grid = torch.tensor([0])
         side_length = cfg.side_length
 
         if d_coordinate == 2:
             grid = torch.zeros(d_out, side_length, side_length)
-
         else:
             grid = torch.zeros(d_out, side_length, side_length, side_length)
 
@@ -49,9 +47,24 @@ class FieldGrid(Field):
         if self.d_coordinate == 2:
             coordinates = coordinates.unsqueeze(1).unsqueeze(1)
             grid = self.grid.unsqueeze(0).expand(coordinates.shape[0], -1, -1, -1)
+            return nn.functional.grid_sample(grid, coordinates).squeeze(-1).squeeze(-1)
 
         if self.d_coordinate == 3:
             coordinates = coordinates.unsqueeze(1).unsqueeze(1).unsqueeze(1)
             grid = self.grid.unsqueeze(0).expand(coordinates.shape[0], -1, -1, -1, -1)
+            print(grid.shape)
+            print(coordinates.shape)
+            n = (
+                nn.functional.grid_sample(grid, coordinates)
+                .squeeze(-1)
+                .squeeze(-1)
+                .squeeze(-1)
+            )
+            print(n.shape)
 
-        return nn.functional.grid_sample(grid, coordinates).squeeze(-1).squeeze(-1)
+            return (
+                nn.functional.grid_sample(grid, coordinates)
+                .squeeze(-1)
+                .squeeze(-1)
+                .squeeze(-1)
+            )
