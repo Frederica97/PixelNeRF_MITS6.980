@@ -30,10 +30,8 @@ class FieldGroundPlan(Field):
         assert d_coordinate in (2, 3)
 
         self.pe = PositionalEncoding(cfg.positional_encoding_octaves)
-        self.grid = FieldGrid(cfg.grid, d_coordinate, cfg.d_grid_feature)
-        self.mlp = FieldMLP(
-            cfg.mlp, cfg.d_grid_feature + 2 * cfg.positional_encoding_octaves, d_out
-        )
+        self.grid = FieldGrid(cfg.grid, d_coordinate - 1, cfg.d_grid_feature)
+        self.mlp = FieldMLP(cfg.mlp, cfg.d_grid_feature + self.pe.d_out(1), d_out)
 
     def forward(
         self,
@@ -46,12 +44,9 @@ class FieldGroundPlan(Field):
         - Concatenate the grid's outputs with the corresponding encoded Z values, then
           feed the result through the MLP.
         """
-        coordinates_xy = coordinates[:, 0:2]
-        coordinates_z = coordinates[:, 1:]
-
+        coordinates_xy, coordinates_z = torch.split(coordinates, [2, 1], dim=1)
         feature_z = self.pe(coordinates_z)
         feature_xy = self.grid(coordinates_xy)
 
         features = torch.cat((feature_xy, feature_z), 1)
-
         return self.mlp(features)

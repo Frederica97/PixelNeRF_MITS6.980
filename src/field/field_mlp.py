@@ -37,7 +37,7 @@ class FieldMLP(Field):
 
         if self.num_octaves is not None:
             self.pe = PositionalEncoding(self.num_octaves)
-            input_dim = self.num_octaves * 2
+            input_dim *= self.num_octaves * 2
 
         layers.append(nn.Linear(input_dim, d_hidden))
         layers.append(nn.ReLU())
@@ -57,4 +57,5 @@ class FieldMLP(Field):
 
         if self.num_octaves is not None:
             coordinates = self.pe(coordinates)
+
         return self.mlp(coordinates)

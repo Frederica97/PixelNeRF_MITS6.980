@@ -11,7 +11,7 @@
             "module": "scripts.train_field",
             "justMyCode": true,
             "args": [
-                "field=ground_plan",
+                "field=mlp",
                 "dataset=image",
             ]
         },

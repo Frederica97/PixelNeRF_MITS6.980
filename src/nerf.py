@@ -37,15 +37,13 @@ class NeRF(nn.Module):
             origins, directions, near, far, self.cfg.num_samples
         )  # shape is 512, 128, 3 and 512, 129
 
-        print(sample_locations.shape)
+        field_output = [self.field(e) for e in sample_locations]
+        field_output = torch.stack(field_output)
 
-        print(boundaries.shape)
-        print(self.field)
-        field_output = self.field(sample_locations)
-        rgb_color = torch.sigmoid(field_output[:, :3])
-        density = torch.sigmoid(field_output[:, 3])
+        rgb_color, density = torch.split(field_output, [3, 1], dim=-1)
+        alpha = self.compute_alpha_values(density.squeeze(), boundaries)
+        rgb_color = (rgb_color + 1) / 2
 
-        alpha = self.compute_alpha_values(density, boundaries)
         final_image = self.alpha_composite(alpha, rgb_color)
 
         return final_image
@@ -98,7 +96,5 @@ class NeRF(nn.Module):
         """
         transmittance = torch.cumprod(1.0 - alphas, dim=0)
         weights = alphas * transmittance
-
-        expected_radiance = torch.sum(weights.unsqueeze(-1) * colors, dim=0)
-
+        expected_radiance = torch.sum(weights.unsqueeze(-1) * colors, dim=1)
         return expected_radiance
