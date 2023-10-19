@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 from jaxtyping import Float
 from torch import Tensor
-import einops
 
 
 class PositionalEncoding(nn.Module):
