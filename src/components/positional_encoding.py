@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from jaxtyping import Float
 from torch import Tensor
+import einops
 
 
 class PositionalEncoding(nn.Module):
@@ -19,22 +20,19 @@ class PositionalEncoding(nn.Module):
         signal using both sine and cosine.
         """
 
-        dim = len(samples[-1])
-        mul = torch.zeros(dim, 2 * dim * self.num_octaves)
-        for i in range(dim):
-            for j in range(self.num_octaves):
-                mul[i, 2 * i + 2 * j] = 2 ** (j - 1) * torch.pi
-                mul[i, 2 * i + 2 * j + 1] = 2 ** (j - 1) * torch.pi
-        pe = torch.einsum("...i, ij-> ...j", samples, mul)
+        frequencies = torch.arange(
+            2 * torch.pi, 2 * self.num_octaves * torch.pi, self.num_octaves
+        )
+        phases = torch.tensor(torch.pi / 2)
+        frequencies = frequencies.repeat(2, 1)
+        phases = phases.repeat(self.num_octaves)
+        zeros = torch.zeros_like(phases)
+        phases = torch.stack((zeros, phases))
 
-        last_dim = -1
-        num_cols = pe.size(last_dim)
-
-        mask_even = torch.arange(num_cols) % 2 == 0
-        mask_odd = ~mask_even
-
-        pe[..., mask_even] = torch.sin(pe[..., mask_even])
-        pe[..., mask_odd] = torch.cos(pe[..., mask_odd])
+        pe = torch.sin(
+            torch.einsum("bi, pf-> bpfi", samples, frequencies) + phases.unsqueeze(-1)
+        )
+        pe = torch.reshape(pe, (samples.shape[0], -1))
         return pe
 
     def d_out(self, dimensionality: int):
