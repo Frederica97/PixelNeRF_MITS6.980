@@ -1,7 +1,7 @@
 # These defaults are interpreted by Hydra (a configuration framework) to refer to
 # sub-configurations in subfolders of the config folder.
 defaults:
-  - field: siren
+  - field: mlp
   - dataset: nerf
   - _self_
 
@@ -9,7 +9,7 @@ nerf:
   num_samples: 128
 
 num_iterations: 8192
-visualization_interval: 50
+visualization_interval: 128
 learning_rate: 1e-2
 batch_size: 512
 

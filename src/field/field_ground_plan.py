@@ -26,8 +26,7 @@ class FieldGroundPlan(Field):
         Your ground plan only has to handle the 3D case.
         """
         super().__init__(cfg, d_coordinate, d_out)
-        # assert d_coordinate == 3, "d_coordinate should be equal to 3"
-        assert d_coordinate in (2, 3)
+        assert d_coordinate == 3, "d_coordinate should be equal to 3"
 
         self.pe = PositionalEncoding(cfg.positional_encoding_octaves)
         self.grid = FieldGrid(cfg.grid, d_coordinate - 1, cfg.d_grid_feature)

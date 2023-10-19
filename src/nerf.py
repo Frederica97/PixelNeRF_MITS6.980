@@ -1,9 +1,9 @@
+import torch
 from jaxtyping import Float
 from omegaconf import DictConfig
 from torch import Tensor, nn
 
 from .field.field import Field
-import torch
 
 
 class NeRF(nn.Module):
@@ -35,17 +35,17 @@ class NeRF(nn.Module):
 
         sample_locations, boundaries = self.generate_samples(
             origins, directions, near, far, self.cfg.num_samples
-        )  # shape is 512, 128, 3 and 512, 129
+        )
 
         field_output = [self.field(e) for e in sample_locations]
         field_output = torch.stack(field_output)
 
         rgb_color, density = torch.split(field_output, [3, 1], dim=-1)
+        rgb_color = torch.sigmoid(rgb_color)
+        density = nn.ReLU()(density)
+
         alpha = self.compute_alpha_values(density.squeeze(), boundaries)
-        rgb_color = (rgb_color + 1) / 2
-
         final_image = self.alpha_composite(alpha, rgb_color)
-
         return final_image
 
     def generate_samples(
@@ -94,7 +94,9 @@ class NeRF(nn.Module):
         """Alpha-composite the supplied alpha values and colors. You may assume that the
         background is black.
         """
-        transmittance = torch.cumprod(1.0 - alphas, dim=0)
-        weights = alphas * transmittance
-        expected_radiance = torch.sum(weights.unsqueeze(-1) * colors, dim=1)
-        return expected_radiance
+        T = torch.ones_like(alphas)
+        for i in range(1, alphas.shape[1]):
+            T[:, i] = torch.prod(1 - alphas[:, :i], dim=1)
+        weights = T * alphas
+        colors = torch.sum(weights.unsqueeze(-1) * colors, dim=1)  # sum over samples
+        return colors

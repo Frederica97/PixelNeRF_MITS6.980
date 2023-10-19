@@ -37,20 +37,5 @@ class PositionalEncoding(nn.Module):
         pe[..., mask_odd] = torch.cos(pe[..., mask_odd])
         return pe
 
-        # if samples.shape[1] < 2:
-        #     pe = torch.zeros(samples.shape[0], 2 * self.num_octaves)
-        #     for i in range(self.num_octaves):
-        #         pe[:, 2 * i] = torch.sin(2 ** (i - 1) * torch.pi * samples[:, 0])
-        #         pe[:, 2 * i + 1] = torch.cos(2 ** (i - 1) * torch.pi * samples[:, 0])
-        # else:
-        #     num_batch, num_dim = samples.shape
-
-        #     pe = torch.zeros(num_batch, self.d_out(len(samples.shape)))
-        #     for i in range(self.num_octaves):
-        #         pe[:, 4 * i] = torch.sin(2 ** (i - 1) * torch.pi * samples[:, 0])
-        #         pe[:, 4 * i + 1] = torch.cos(2 ** (i - 1) * torch.pi * samples[:, 0])
-        #         pe[:, 4 * i + 2] = torch.sin(2 ** (i - 1) * torch.pi * samples[:, 1])
-        #         pe[:, 4 * i + 3] = torch.cos(2 ** (i - 1) * torch.pi * samples[:, 1])
-
     def d_out(self, dimensionality: int):
         return dimensionality * 2 * self.num_octaves

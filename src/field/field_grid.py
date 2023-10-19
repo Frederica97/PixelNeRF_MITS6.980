@@ -52,7 +52,6 @@ class FieldGrid(Field):
         if self.d_coordinate == 3:
             coordinates = coordinates.unsqueeze(1).unsqueeze(1).unsqueeze(1)
             grid = self.grid.unsqueeze(0).expand(coordinates.shape[0], -1, -1, -1, -1)
-
             return (
                 nn.functional.grid_sample(grid, coordinates)
                 .squeeze(-1)
